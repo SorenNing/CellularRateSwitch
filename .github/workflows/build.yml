@@ -1,0 +1,25 @@
+name: Build CellularRateSwitch
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record source and toolchain
+        run: |
+          git rev-parse HEAD
+          xcodebuild -version
+      - name: Test production readback policy
+        run: python3 tools/check_source.py
+      - name: Build and verify both packages
+        run: bash tools/build-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CellularRateSwitch-1.0.0
+          path: |
+            dist/*.deb
+            dist/*.json
+          if-no-files-found: error

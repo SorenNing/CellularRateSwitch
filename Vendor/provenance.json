@@ -1,0 +1,29 @@
+{
+  "origin": "Ning CC18 customized baseline; original netskao.cccellularratemodule backend",
+  "original_author": "Netskao",
+  "baseline_deb_sha256": "4c2f36e17adbfe6d78412e629d749ac331d5eaabd003b18286ee37a14a2979e2",
+  "files": {
+    "CCCellularRate@3x.png": {
+      "sha256": "3f9b4042fea35819e99844e9f78f60b801d95a3ca0b0cebb38a89124cfef0c8f",
+      "size": 2025
+    },
+    "CCCellularRateTool": {
+      "sha256": "43cbf8c9c7da7897b13691aa434f44fb4a494ea32d430d54de62da4f46f11fb4",
+      "size": 167664
+    },
+    "Info.plist": {
+      "sha256": "804ba046420690d1f0bc4a825e3eaaeaec75a93bf33bc645fe8f815db67dea13",
+      "size": 1101
+    },
+    "SettingsIcon@3x.png": {
+      "sha256": "d49e4106bc57e18d6063d511de9f9b12c37e5e1346ac2eb402e4006db435cd2b",
+      "size": 17605
+    },
+    "CCCellularRateModule": {
+      "sha256": "5ccbb7cf9f8b18959f8901c88a21ee3d63a280f9ebb8a24b6e272bbd40ee4e76",
+      "size": 432368
+    }
+  },
+  "helper_policy": "Original signed helper preserved; do not print or strip its entitlements",
+  "runtime_tested": false
+}

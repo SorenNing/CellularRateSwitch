@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
+mkdir -p build dist
+python3 tools/prepare_backend.py
+python3 - <<'PY'
+from pathlib import Path
+import hashlib
+p=Path('Vendor/CCCellularRateTool')
+assert hashlib.sha256(p.read_bytes()).hexdigest()=='43cbf8c9c7da7897b13691aa434f44fb4a494ea32d430d54de62da4f46f11fb4'
+PY
+for ARCH in arm64 arm64e; do
+  BACKEND="build/${ARCH}/payload/Library/ControlCenter/Bundles/NingCellularRate.bundle/RateBackend.bundle"
+  xcrun --sdk iphoneos clang -O2 -Wall -Wextra -Werror -fvisibility=hidden \
+    -isysroot "$SDK" -target "${ARCH}-apple-ios16.0" -dynamiclib \
+    -Wl,-fixup_chains -Wl,-install_name,@loader_path/RateSpawnBridge.dylib \
+    src/RateSpawnBridge.c -o "$BACKEND/RateSpawnBridge.dylib"
+  xcrun --sdk iphoneos clang -fobjc-arc -fblocks -O2 -Wall -Wextra \
+    -Werror=implicit-function-declaration -Werror=objc-method-access -Werror=incomplete-implementation \
+    -isysroot "$SDK" -target "${ARCH}-apple-ios16.0" -dynamiclib -Isrc -Ftools/linker \
+    -framework Foundation -framework UIKit -framework CoreGraphics -framework QuartzCore \
+    -Wl,-needed_framework,ControlCenterUIKit -Wl,-fixup_chains \
+    -Wl,-install_name,@loader_path/NingCellularRate \
+    src/NINGCRModule.m src/NINGCRBackend.m -o "build/${ARCH}/NingCellularRate"
+  cp Vendor/CCCellularRateTool "$BACKEND/NingCellularRateTool"
+  cp Resources/CCCellularRate@3x.png "$BACKEND/NNCellularRate@3x.png"
+  cp Resources/SettingsIcon@3x.png "$BACKEND/SettingsIcon@3x.png"
+  # The original helper is unchanged: retain both original signatures and entitlements.
+  xcrun codesign --force --sign - --timestamp=none "$BACKEND/RateSpawnBridge.dylib"
+  xcrun codesign --force --sign - --timestamp=none "$BACKEND"
+  xcrun codesign --force --sign - --timestamp=none "build/${ARCH}/NingCellularRate"
+  xcrun codesign --verify --strict --all-architectures "$BACKEND/RateSpawnBridge.dylib"
+  xcrun codesign --verify --strict --all-architectures "$BACKEND/RateBackend"
+  xcrun codesign --verify --strict --all-architectures "$BACKEND/NingCellularRateTool"
+  xcrun codesign --verify --strict --all-architectures "build/${ARCH}/NingCellularRate"
+done
+cp build/backend-relocation.json dist/
+python3 tools/package.py
+python3 tools/verify.py
+python3 tools/verify_macos.py
