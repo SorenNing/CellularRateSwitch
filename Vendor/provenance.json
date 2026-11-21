@@ -24,6 +24,6 @@
       "size": 432368
     }
   },
-  "helper_policy": "Original signed helper preserved; do not print or strip its entitlements",
+  "helper_policy": "Vendor original bytes preserved. Delivery copy signature renewed using the complete original entitlements; all file-backed sections, dependencies and entitlement dictionaries must remain identical across both slices",
   "runtime_tested": false
 }

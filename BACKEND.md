@@ -15,7 +15,7 @@
 3. 只将该后端的 `_posix_spawn` 导入改名并重绑定到私有 `_ning__spawn`：arm64 修改原 lazy-bind 操作码中的库序号，arm64e 修改 chained import 的库序号，并同步 nlist 库序号。保留其他导入、原函数代码及原生 item handler。
 4. 构建时重新签名被修改的后端，不修改 CPU subtype 或 chained pointer 格式。
 5. 私有桥通过自身加载路径定位同目录 `NingCellularRateTool`；原 argv（含 argv[0]）、attributes、actions、environment 不改，只重定位实际执行路径。真实 `posix_spawn` 从 libSystem 显式解析，不 hook 全进程、不修改 SpringBoard 的其他调用者。
-6. helper 文件与原件逐字节相同，保留原 arm64/arm64e 双切片签名和 CommCenter entitlement；不去签、改签或重写 helper。
+6. `Vendor/CCCellularRateTool` 保持原件逐字节不变。首次 CI 的 macOS 严格校验报告其 arm64e 切片「code object is not signed at all」，因此交付副本使用原始 entitlements 重新生成标准 ad-hoc XML/DER 签名。禁止改业务代码、速率值或权限。`helper_invariants.py` 比较两架构全部文件支撑区段、动态依赖与完整 entitlement 字典，任何非签名语义变化都会拒绝。
 
 后端、桥、helper 都放在本模块私有的嵌套 bundle 里，不覆盖 CC18 文件或 `/usr/local/bin/CCCellularRateTool`，不要求原 CC18 继续安装。
 

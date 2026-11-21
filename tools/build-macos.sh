@@ -26,7 +26,10 @@ for ARCH in arm64 arm64e; do
   cp Vendor/CCCellularRateTool "$BACKEND/NingCellularRateTool"
   cp Resources/CCCellularRate@3x.png "$BACKEND/NNCellularRate@3x.png"
   cp Resources/SettingsIcon@3x.png "$BACKEND/SettingsIcon@3x.png"
-  # The original helper is unchanged: retain both original signatures and entitlements.
+  # Renew the helper signature with precisely the original XML/DER entitlements.
+  # Original vendor bytes remain archived; verify every file-backed section below.
+  xcrun codesign --force --sign - --timestamp=none --generate-entitlement-der \
+    --entitlements Vendor/helper-entitlements.plist "$BACKEND/NingCellularRateTool"
   xcrun codesign --force --sign - --timestamp=none "$BACKEND/RateSpawnBridge.dylib"
   xcrun codesign --force --sign - --timestamp=none "$BACKEND"
   xcrun codesign --force --sign - --timestamp=none "build/${ARCH}/NingCellularRate"

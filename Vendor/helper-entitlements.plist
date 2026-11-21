@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>application-identifier</key>
+	<string>com.apple.Preferences</string>
+	<key>com.apple.CommCenter.fine-grained</key>
+	<array>
+		<string>cellular-plan</string>
+		<string>spi</string>
+		<string>identity</string>
+		<string>data-usage</string>
+		<string>phone</string>
+		<string>data-allowed-write</string>
+		<string>carrier-settings</string>
+		<string>preferences-write</string>
+		<string>preferences-reset</string>
+		<string>carrier-space</string>
+	</array>
+	<key>com.apple.private.security.no-sandbox</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppBundles</key>
+	<true/>
+	<key>com.apple.private.security.storage.AppDataContainers</key>
+	<true/>
+	<key>platform-application</key>
+	<true/>
+</dict>
+</plist>

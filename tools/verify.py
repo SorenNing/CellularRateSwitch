@@ -2,6 +2,7 @@
 from pathlib import Path
 import io,tarfile,json,hashlib,plistlib,sys
 from macho import inspect
+from helper_invariants import compare_helper
 from binary_checks import require
 ROOT=Path(__file__).resolve().parents[1]
 def verify(p):
@@ -40,7 +41,7 @@ def verify(p):
     inspect(data,sub);backend_count+=1;require(b'CCCellularRate' not in data and b'NNCellularRateModuleViewController' in data,'namespace isolation');require(all('@loader_path/RateSpawnBridge.dylib' in s['loads'] for s in r['slices']),'private bridge dependency')
    elif n.endswith('/RateSpawnBridge.dylib'):inspect(data,sub);bridge_count+=1
    elif n.endswith('/NingCellularRateTool'):
-    helper_count+=1;require(all({5,7}.issubset(x['signature']['slots']) for x in r['slices']),'helper entitlements');require(hashlib.sha256(data).hexdigest()=='43cbf8c9c7da7897b13691aa434f44fb4a494ea32d430d54de62da4f46f11fb4','original helper changed')
+    helper_count+=1;require(all({5,7}.issubset(x['signature']['slots']) for x in r['slices']),'helper entitlements');r['preserved_original']=compare_helper((ROOT/'Vendor/CCCellularRateTool').read_bytes(),data)
    else:raise ValueError('Unexpected binary '+n)
   else:require(mode==0o644,'resource permissions')
  require(main_count==backend_count==helper_count==bridge_count==1,'missing or duplicate program')
