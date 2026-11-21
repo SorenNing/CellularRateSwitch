@@ -28,13 +28,12 @@ def main():
  for arch,cpu,prefix in [('iphoneos-arm64','arm64','var/jb/'),('iphoneos-arm64e','arm64e','')]:
   payload={}
   def put(n,b,mode=0o644):payload[prefix+n]=(b,mode)
-  put(BUNDLE+'/NingCellularRate',(ROOT/f'build/{cpu}/NingCellularRate').read_bytes(),0o755)
-  for p in sorted((ROOT/'Resources').rglob('*')):
-   if p.is_file():put(BUNDLE+'/'+p.relative_to(ROOT/'Resources').as_posix(),p.read_bytes())
-  # Build script stages the isolated, signed backend and helper per architecture.
+  # Package the already-sealed complete bundle verbatim. Do not reconstruct it.
+  envelope=ROOT/f'build/{cpu}/payload'/BUNDLE/'_CodeSignature/CodeResources'
+  assert envelope.is_file() and envelope.stat().st_size>0,'outer bundle resource seal missing'
   for p in sorted((ROOT/f'build/{cpu}/payload').rglob('*')):
    if p.is_file():
-    n=p.relative_to(ROOT/f'build/{cpu}/payload').as_posix();put(n,p.read_bytes(),0o755 if p.name in ('RateBackend','NingCellularRateTool','RateSpawnBridge.dylib') else 0o644)
+    n=p.relative_to(ROOT/f'build/{cpu}/payload').as_posix();put(n,p.read_bytes(),0o755 if p.name in ('NingCellularRate','RateBackend','NingCellularRateTool','RateSpawnBridge.dylib') else 0o644)
   icon=ROOT/'Resources/SettingsIcon@3x.png'
   if icon.exists():put('usr/share/icons/com.ning.cellularrate.png',icon.read_bytes())
   fields={'Package':'com.ning.cellularrate','Name':'蜂窝4/5G切换','Version':VERSION,'Architecture':arch,'Maintainer':'Ning&Netskao','Author':'Ning&Netskao','Section':'Tweaks','Priority':'optional','Depends':'firmware (>= 16.0), firmware (<< 18.0), com.opa334.ccsupport','Description':'Standalone Control Center 4G/5G switch with native state readback.','Icon':'file:///'+prefix+'usr/share/icons/com.ning.cellularrate.png'}

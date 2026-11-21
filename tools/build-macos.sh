@@ -11,7 +11,11 @@ p=Path('Vendor/CCCellularRateTool')
 assert hashlib.sha256(p.read_bytes()).hexdigest()=='43cbf8c9c7da7897b13691aa434f44fb4a494ea32d430d54de62da4f46f11fb4'
 PY
 for ARCH in arm64 arm64e; do
-  BACKEND="build/${ARCH}/payload/Library/ControlCenter/Bundles/NingCellularRate.bundle/RateBackend.bundle"
+  BUNDLE="build/${ARCH}/payload/Library/ControlCenter/Bundles/NingCellularRate.bundle"
+  BACKEND="$BUNDLE/RateBackend.bundle"
+  cp Resources/Info.plist "$BUNDLE/Info.plist"
+  cp Resources/CCCellularRate@3x.png "$BUNDLE/CCCellularRate@3x.png"
+  cp Resources/SettingsIcon@3x.png "$BUNDLE/SettingsIcon@3x.png"
   xcrun --sdk iphoneos clang -O2 -Wall -Wextra -Werror -fvisibility=hidden \
     -isysroot "$SDK" -target "${ARCH}-apple-ios16.0" -dynamiclib \
     -Wl,-fixup_chains -Wl,-install_name,@loader_path/RateSpawnBridge.dylib \
@@ -22,7 +26,7 @@ for ARCH in arm64 arm64e; do
     -framework Foundation -framework UIKit -framework CoreGraphics -framework QuartzCore \
     -Wl,-needed_framework,ControlCenterUIKit -Wl,-fixup_chains \
     -Wl,-install_name,@loader_path/NingCellularRate \
-    src/NINGCRModule.m src/NINGCRBackend.m -o "build/${ARCH}/NingCellularRate"
+    src/NINGCRModule.m src/NINGCRBackend.m -o "$BUNDLE/NingCellularRate"
   cp Vendor/CCCellularRateTool "$BACKEND/NingCellularRateTool"
   cp Resources/CCCellularRate@3x.png "$BACKEND/NNCellularRate@3x.png"
   cp Resources/SettingsIcon@3x.png "$BACKEND/SettingsIcon@3x.png"
@@ -32,11 +36,15 @@ for ARCH in arm64 arm64e; do
     --entitlements Vendor/helper-entitlements.plist "$BACKEND/NingCellularRateTool"
   xcrun codesign --force --sign - --timestamp=none "$BACKEND/RateSpawnBridge.dylib"
   xcrun codesign --force --sign - --timestamp=none "$BACKEND"
-  xcrun codesign --force --sign - --timestamp=none "build/${ARCH}/NingCellularRate"
+  # Seal the complete outer bundle, including Info.plist and nested resources.
+  # Never sign a detached executable and then place it inside an unsealed bundle.
+  xcrun codesign --force --sign - --timestamp=none "$BUNDLE"
   xcrun codesign --verify --strict --all-architectures "$BACKEND/RateSpawnBridge.dylib"
   xcrun codesign --verify --strict --all-architectures "$BACKEND/RateBackend"
   xcrun codesign --verify --strict --all-architectures "$BACKEND/NingCellularRateTool"
-  xcrun codesign --verify --strict --all-architectures "build/${ARCH}/NingCellularRate"
+  xcrun codesign --verify --strict --all-architectures "$BUNDLE/NingCellularRate"
+  xcrun codesign --verify --strict --deep "$BUNDLE"
+  test -s "$BUNDLE/_CodeSignature/CodeResources"
 done
 cp build/backend-relocation.json dist/
 python3 tools/package.py

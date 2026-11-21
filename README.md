@@ -28,7 +28,9 @@ python3 tools/check_source.py
 python3 tools/verify.py
 ```
 
-打包使用 Python 确定性 ar/USTAR/gzip，显式包含父目录与权限，不调用 macOS `ar`。不附带自动注销、安装或启用脚本。
+打包使用 Python 确定性 ar/USTAR/gzip，显式包含父目录与权限，不调用 macOS `ar`。先在最终目录装配完整模块，按 helper → 桥 → 内层后端 bundle → 外层模块 bundle 的顺序签名，再逐字节封装已签名目录；禁止把离散签名的可执行文件放进未封装资源的 bundle。终包重新解包后，核验 Info/CodeResources 的签名特殊槽、资源内容哈希，并用 macOS `codesign --strict --deep` 复验内外 bundle。不附带自动注销、安装或启用脚本。
+
+当前构建进度与未验证项见 `BUILD_STATUS.md`。
 
 ## 验证边界
 

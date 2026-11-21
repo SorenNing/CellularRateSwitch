@@ -12,8 +12,10 @@ jobs:
         run: |
           git rev-parse HEAD
           xcodebuild -version
-      - name: Test production readback policy
-        run: python3 tools/check_source.py
+      - name: Test production readback and resource-seal checks
+        run: |
+          python3 tools/check_source.py
+          python3 tools/test_resource_seals.py
       - name: Build and verify both packages
         run: bash tools/build-macos.sh
       - uses: actions/upload-artifact@v4

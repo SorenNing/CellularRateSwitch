@@ -3,6 +3,7 @@ from pathlib import Path
 import io,tarfile,json,hashlib,plistlib,sys
 from macho import inspect
 from helper_invariants import compare_helper
+from resource_seals import verify_bundle_seal
 from binary_checks import require
 ROOT=Path(__file__).resolve().parents[1]
 def verify(p):
@@ -47,7 +48,12 @@ def verify(p):
  require(main_count==backend_count==helper_count==bridge_count==1,'missing or duplicate program')
  base=prefix+'Library/ControlCenter/Bundles/NingCellularRate.bundle/'
  info=plistlib.loads(files[base+'Info.plist'][0]);require(info['CFBundleIdentifier']=='com.ning.cellularrate.module' and info['NSPrincipalClass']=='NINGCRModule','module registration')
- return {'file':p.name,'size':len(b),'sha256':hashlib.sha256(b).hexdigest(),'control':fields,'files':len(files),'binaries':binaries,'runtime_tested':False}
+ seals={}
+ for relative,executable in [('', 'NingCellularRate'),('RateBackend.bundle/','RateBackend')]:
+  bundlebase=base+relative
+  require(bundlebase+'_CodeSignature/CodeResources' in files,'bundle resource envelope missing: '+bundlebase)
+  seals[relative or 'main']=verify_bundle_seal(files,bundlebase,executable)
+ return {'file':p.name,'size':len(b),'sha256':hashlib.sha256(b).hexdigest(),'control':fields,'files':len(files),'binaries':binaries,'bundle_seals':seals,'runtime_tested':False}
 if __name__=='__main__':
  paths=[Path(s) for s in sys.argv[1:]] or sorted((ROOT/'dist').glob('*.deb'));require(paths,'no deb files')
  reports=[verify(p) for p in paths];out=ROOT/'dist/package-validation.json';out.parent.mkdir(exist_ok=True);out.write_text(json.dumps(reports,ensure_ascii=False,indent=2)+'\n')

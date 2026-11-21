@@ -21,7 +21,9 @@ for package in sorted((ROOT/'dist').glob('*.deb')):
   for program in programs:
    r=subprocess.run(['codesign','--verify','--strict','--all-architectures',str(program)],capture_output=True,text=True)
    assert r.returncode==0,(program.name,r.stderr)
-  bundles=list(base.rglob('RateBackend.bundle'));assert len(bundles)==1
-  r=subprocess.run(['codesign','--verify','--strict',str(bundles[0])],capture_output=True,text=True);assert r.returncode==0,r.stderr
-  report.append({'package':package.name,'programs':[str(p.relative_to(base)) for p in programs],'strict_codesign':True,'backend_bundle_resources':True})
+  for name in ('NingCellularRate.bundle','RateBackend.bundle'):
+   bundles=list(base.rglob(name));assert len(bundles)==1
+   assert (bundles[0]/'_CodeSignature/CodeResources').is_file(),name+' resource envelope missing'
+   r=subprocess.run(['codesign','--verify','--strict','--deep',str(bundles[0])],capture_output=True,text=True);assert r.returncode==0,(name,r.stderr)
+  report.append({'package':package.name,'programs':[str(p.relative_to(base)) for p in programs],'strict_codesign':True,'outer_and_backend_bundle_resources':True})
 (ROOT/'dist/macos-final-signatures.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report))
